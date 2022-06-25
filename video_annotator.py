@@ -3,8 +3,6 @@ import keyboard
 import threading
 import time
 import tkinter as tk
-from tkinter import Label
-from tkinter import Text
 from tkinter import *
 
 CRITICAL_KEYS = ["1", "2", "3", "5", "space", "left", "right"]
