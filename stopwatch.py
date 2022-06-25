@@ -31,14 +31,14 @@ def StartTimer(lbl):
     global running
     running = True
     counter_label(lbl)
-    # start_btn['state'] = 'disabled'
+    start_btn['state'] = 'disabled'
     # stop_btn['state'] = 'normal'
     # reset_btn['state'] = 'normal'
 
 
 def StopTimer():
     global running
-    # start_btn['state'] = 'normal'
+    start_btn['state'] = 'normal'
     # stop_btn['state'] = 'disabled'
     # reset_btn['state'] = 'normal'
     running = False
@@ -52,11 +52,6 @@ def ResetTimer(lbl):
         lbl['text'] = '00'
     else:
         lbl['text'] = ''
-
-
-# bg = PhotoImage(file='stopwatch.png')
-# img = Label(ws, image=bg, bg='#299617')
-# img.place(x=75, y=50)
 
 lbl = Label(
     ws,
@@ -76,12 +71,13 @@ label_msg = Label(
 lbl.place(x=160, y=170)
 label_msg.place(x=170, y=250)
 
-# start_btn = Button(
-#     ws,
-#     text='Start',
-#     width=15,
-#     command=lambda: StartTimer(lbl)
-# )
+start_btn = Button(
+    ws,
+    text='Start',
+    width=15,
+    command=lambda: StartTimer(lbl)
+)
+start_btn.place(x=30, y=390)
 
 def keypress(event):
     print(event)
