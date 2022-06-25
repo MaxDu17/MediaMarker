@@ -10,12 +10,22 @@ from tkinter import *
 CRITICAL_KEYS = ["1", "2", "3", "5", "space", "left", "right"]
 MONITORING = True
 root = tk.Tk()
+root.title("Video Annotator")
 root.attributes('-topmost',True)
 running = False
 counter = -1
-root.geometry('300x300+1000+300')
+root.geometry('300x320+1000+300')
+
+#TODO: add toggle button (to prevent shortcut misery)
+
+beginning = time.time()
+reference_point = time.time()
+running_time = 0
+pausing_time = 0
+
 def counter_label(lbl):
     def count():
+        global running_time
         if running:
             global counter
             if counter == -1:
@@ -24,16 +34,28 @@ def counter_label(lbl):
                 display = to_string(counter)
 
             lbl['text'] = display
-            lbl.after(1000, count)
-            counter += 1
+            current_running_time = (time.time() - reference_point) + running_time
+            counter = int(current_running_time)
+            lbl.after(500, count) #update every 1/2 second. We might see some "jogging" action
 
     count()
 
 def ToggleTimer(lbl):
     global running
+    global reference_point
+    global running_time
+    global pausing_time
     running = not running
     if running:
+        pausing_time += time.time() - reference_point #this is the time that passed in paus
+        reference_point = time.time() #now, we are in a new reference point
+        # print(f"running_time: {running_time}, pausing_time: {pausing_time}")
         counter_label(lbl)
+    else: #we enter the pausing time
+        running_time += time.time() - reference_point
+        reference_point = time.time()
+        # print(f"running_time: {running_time}, pausing_time: {pausing_time}")
+
 
 def SetTimer(lbl):
     global MONITORING
@@ -81,6 +103,14 @@ dump_btn = Button(
 )
 dump_btn.place(x=160, y=250)
 
+toggle_btn = Button(
+    root,
+    text='TG',
+    width=15,
+    command=lambda: ToggleTimer(lbl)
+)
+toggle_btn.place(x=85, y=280)
+
 
 def to_string(counter):
     mins = counter // 60
@@ -104,8 +134,11 @@ def app_main_loop():
             button = input_queue.get()
             if button == "space":
                 ToggleTimer(lbl)
-            elif button == "left" and counter > 10:
-                counter -= 10
+            elif button == "left":
+                if counter > 10:
+                    counter -= 10
+                else:
+                    counter = 0
             elif button == "right":
                 counter += 10
             elif button == "1":
