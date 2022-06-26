@@ -24,10 +24,12 @@ Note that the 4 key is not used because it conflicts with the jogging, for some 
 At the very end, just close out of the window, and the annotations are automatically dumped to a text file found in the same directory as the `video_annotator.py` code.
 
 # Advanced Features
-There are three buttons on the window. The first one, `recalibrate`, allows you to enter a custom time into the timer using the command line interface
+There are four buttons on the window. The first one, `Recalibrate`, allows you to enter a custom time into the timer using the command line interface. A neat trick: press the "recalibrate" button on a round number on your video player. Put *this value* into the recalibration; the timer will be running in the background and will to your number accordingly. This allows for live recalibration.
 
-The second one, `dump`, allows you to export the annotations to a text file without closing the window (good for backups)
+The second one, `Dump`, allows you to export the annotations to a text file without closing the window (good for backups)
 
-The third one, `tg`, allows you to start and stop the timestamp without using the space bar 
+The third one, `Start / Stop Timer`, allows you to start and stop the timestamp without using the space bar 
 
-Because the timer uses system time, it should not lag behind. However, the counter may lag due to processing overhead. When this happens, you will see it increase faster for a little bit to catch up. 
+The fourth one, `Stop / Start Listening`, allows you to momentarily stop the key monitoring, if you're typing something. 
+
+Because the timer uses system time, it should not lag behind. The timer has been stress tested on a one-hour-long video, and it keeps in lock-step with the YouTube player. 

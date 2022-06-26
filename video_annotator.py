@@ -5,10 +5,12 @@ import time
 import tkinter as tk
 from tkinter import *
 
-CRITICAL_KEYS = ["1", "2", "3", "5", "space", "left", "right"]
-JOG_LENGTH = 10
+# TODO: MODIFY these for your own purposes
+CRITICAL_KEYS = ["1", "2", "3", "5", "space", "left", "right"] #keys what we listen to
+KEY_DICT = {"1" : "CORE FACT", "2" : "LOOK INTO THIS", "3" : "INTERESTING FACT", "5" : "CROSS REFERENCE"} #what they print out
+JOG_LENGTH = 10 #how many seconds the arrow keys jog for
 
-MONITORING = True
+monitoring = True
 root = tk.Tk()
 root.title("Video Annotator")
 root.attributes('-topmost',True)
@@ -108,10 +110,10 @@ def ToggleTimer(lbl):
 
 
 def SetTimer(lbl):
-    global MONITORING
+    global monitoring
     global running_time
     global reference_point
-    MONITORING = False
+    monitoring = False
     ready = False
     while not ready:
         raw_string = input("enter time in hh:mm:ss format")
@@ -125,11 +127,11 @@ def SetTimer(lbl):
     running_time = hours * 3600 + mins * 60 + secs
     # reference_point = time.time()
     lbl['text'] = f"{hours}:{mins}:{secs}"
-    MONITORING = True
+    monitoring = True
 
 def ToggleIgnore():
-    global MONITORING
-    MONITORING = not MONITORING
+    global monitoring
+    monitoring = not monitoring
     ignore_btn["bg"] = "blue" if ignore_btn["bg"] == "white" else "white"
     ignore_btn["text"] = "Start Listening" if ignore_btn["text"] == "Stop Listening" else "Stop Listening"
 
@@ -165,18 +167,9 @@ def app_main_loop():
                     running_time -= JOG_LENGTH
             elif button == "right":
                 running_time += JOG_LENGTH
-            elif button == "1":
-                database[to_string(counter)] = "CORE FACT"
-                label_msg.insert("1.0", f"{to_string(counter)} CORE FACT\n")
-            elif button == "2":
-                database[to_string(counter)] = "LOOK INTO THIS"
-                label_msg.insert("1.0", f"{to_string(counter)} LOOK INTO THIS\n")
-            elif button == "3":
-                database[to_string(counter)] = "INTERESTING FACT"
-                label_msg.insert("1.0", f"{to_string(counter)} INTERESTING FACT\n")
-            elif button == "5":
-                database[to_string(counter)] = "CROSS REFERENCE"
-                label_msg.insert("1.0", f"{to_string(counter)} CROSS REFERENCE\n")
+            else:
+                database[to_string(counter)] = KEY_DICT[button]
+                label_msg.insert("1.0", f"{to_string(counter)} {KEY_DICT[button]}\n")
         time.sleep(0.05)  # seconds
 
 
@@ -186,7 +179,7 @@ def _check_critical_keys_pressed(input_queue):
         while True:
             done = False
             for key in CRITICAL_KEYS:
-                if keyboard.is_pressed(key) and MONITORING:
+                if keyboard.is_pressed(key) and monitoring:
                     input_queue.put(key)
                     done = True
                     break
