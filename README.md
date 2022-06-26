@@ -27,7 +27,7 @@ Note that the 4 key is not used because it conflicts with the jogging, for some 
 At the very end, just close out of the window, and the annotations are automatically dumped to a text file found in the same directory as the `video_annotator.py` code.
 
 # Advanced Features
-There are four buttons on the window. The first one, `Recalibrate`, allows you to enter a custom time into the timer using the command line interface. A neat trick: press the "recalibrate" button on a round number on your video player. Put *this value* into the recalibration; the timer will be running in the background and will to your number accordingly. This allows for live recalibration.
+There are four buttons on the window. The first one, `Recalibrate`, allows you to enter a custom time into the timer using the command line interface.  A neat trick: press the "recalibrate" button on a round number on your video player but keep the video playing. Put this value into the recalibration; the timer will be running in the background and will add your number accordingly. This allows for live recalibration, and I found it personally super useful.
 
 The second one, `Dump`, allows you to export the annotations to a text file without closing the window (good for backups)
 

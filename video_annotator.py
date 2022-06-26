@@ -22,7 +22,6 @@ beginning = time.time()
 reference_point = time.time()
 current_running_time = 0
 running_time = 0
-pausing_time = 0
 
 lbl = Label(
     root,
@@ -96,37 +95,41 @@ def ToggleTimer(lbl):
     global running
     global reference_point
     global running_time
-    global pausing_time
     running = not running
     if running:
-        pausing_time += time.time() - reference_point #this is the time that passed in paus
-        reference_point = time.time() #now, we are in a new reference point
-        # print(f"running_time: {running_time}, pausing_time: {pausing_time}")
+        reference_point = time.time() #push up the bar
         counter_label(lbl)
     else: #we enter the pausing time
         running_time += time.time() - reference_point
         reference_point = time.time()
-        # print(f"running_time: {running_time}, pausing_time: {pausing_time}")
 
 
 def SetTimer(lbl):
+    beg = time.time()
     global monitoring
     global running_time
     global reference_point
     monitoring = False
     ready = False
     while not ready:
-        raw_string = input("enter time in hh:mm:ss format")
+        raw_string = input("enter time in hh:mm:ss format ")
         hours, mins, secs = tuple(raw_string.split(":"))
         response = input(f"{hours}:{mins}:{secs} sound good? (y/n)")
         if response == "y":
             hours, mins, secs = int(hours), int(mins), int(secs)
+            if hours > 99 or mins > 59 or secs > 59:
+                print("Invalid numbers!")
+                continue
             ready = True
 
     global counter
     running_time = hours * 3600 + mins * 60 + secs
-    # reference_point = time.time()
-    lbl['text'] = f"{hours}:{mins}:{secs}"
+    if running:
+        diff = time.time() - beg
+        running_time += diff #add the time passed
+        reference_point = time.time() #push up the bar
+
+    lbl['text'] = to_string(running_time)
     monitoring = True
 
 def ToggleIgnore():
