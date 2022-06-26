@@ -3,6 +3,9 @@ If you are doing research that requires reviewing large amounts of multimedia, i
 
 This simple python program separates the annotation program from the playback program. You can use any playback software you want. Then, you run this code `video_annotator.py`, which opens a graphic window. Play your video as usual, and the annotator will mimic the timestep of the video. Then, you can annotate timestamps. At the end, the annotatiosn are exported to a simple text file, which you can copy/paste into any database like Zotero. 
 
+You can also use this during narrative interviews, or during rehearsal run-throughs. Anything that requires live annotation, this is your tool! 
+
+It is worth noting that because it is written in python, it can lag. However, this does *not* impact the accuracy of the timestamp, as it references system time directly. 
 # Quick Start
 Install `tkinter` (`tk` in pip) and `keyboard`. Then, run the program. You will see a window that contains a timestamp, a text box, and three buttons. 
 
