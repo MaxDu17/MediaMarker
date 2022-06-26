@@ -15,8 +15,8 @@ root = tk.Tk()
 root.title("Video Annotator")
 root.attributes('-topmost',True)
 running = False
-counter = -1
-root.geometry('300x320+1000+300')
+counter = 0
+root.geometry('300x320+1200+300')
 
 beginning = time.time()
 reference_point = time.time()
@@ -77,16 +77,12 @@ def counter_label(lbl):
         global running_time
         if running:
             global counter
-            if counter == -1:
-                display = "00:00:00"
-            else:
-                display = to_string(counter)
+            display = to_string(counter)
 
             lbl['text'] = display
             current_running_time = (time.time() - reference_point) + running_time
             counter = int(current_running_time)
-            lbl.after(100, count) #update every 1/2 second. We might see some "jogging" action
-
+            lbl.after(100, count) #update every 1/10 second. We might see some "jogging" action
     count()
 
 def ToggleTimer(lbl):
