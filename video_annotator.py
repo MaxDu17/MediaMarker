@@ -6,6 +6,8 @@ import tkinter as tk
 from tkinter import *
 
 CRITICAL_KEYS = ["1", "2", "3", "5", "space", "left", "right"]
+JOG_LENGTH = 10
+
 MONITORING = True
 root = tk.Tk()
 root.title("Video Annotator")
@@ -14,71 +16,20 @@ running = False
 counter = -1
 root.geometry('300x320+1000+300')
 
-#TODO: add toggle button (to prevent shortcut misery)
-
 beginning = time.time()
 reference_point = time.time()
+current_running_time = 0
 running_time = 0
 pausing_time = 0
 
-def counter_label(lbl):
-    def count():
-        global running_time
-        if running:
-            global counter
-            if counter == -1:
-                display = "00:00"
-            else:
-                display = to_string(counter)
-
-            lbl['text'] = display
-            current_running_time = (time.time() - reference_point) + running_time
-            counter = int(current_running_time)
-            lbl.after(500, count) #update every 1/2 second. We might see some "jogging" action
-
-    count()
-
-def ToggleTimer(lbl):
-    global running
-    global reference_point
-    global running_time
-    global pausing_time
-    running = not running
-    if running:
-        pausing_time += time.time() - reference_point #this is the time that passed in paus
-        reference_point = time.time() #now, we are in a new reference point
-        # print(f"running_time: {running_time}, pausing_time: {pausing_time}")
-        counter_label(lbl)
-    else: #we enter the pausing time
-        running_time += time.time() - reference_point
-        reference_point = time.time()
-        # print(f"running_time: {running_time}, pausing_time: {pausing_time}")
-
-
-def SetTimer(lbl):
-    global MONITORING
-    MONITORING = False
-    ready = False
-    while not ready:
-        mins = int(input("enter minutes: "))
-        secs = int(input("enter seconds: "))
-        response = input(f"{mins}:{secs} sound good? (y/n)")
-        if response == "y":
-            ready = True
-
-    global counter
-    counter = mins * 60 + secs
-    lbl['text'] = f"{mins}:{secs}"
-    MONITORING = True
-
 lbl = Label(
     root,
-    text="00:00",
+    text="00:00:00",
     fg="black",
     font="Verdana 40 bold"
 )
 
-label_msg = Text(root, height = 8, width = 30)
+label_msg = Text(root, height = 8, width = 31)
 label_msg.pack()
 
 lbl.place(x=10, y=10)
@@ -103,25 +54,102 @@ dump_btn.place(x=160, y=250)
 
 toggle_btn = Button(
     root,
-    text='TG',
+    text='Start Timer',
     width=15,
+    bg = "green",
     command=lambda: ToggleTimer(lbl)
 )
-toggle_btn.place(x=85, y=280)
+toggle_btn.place(x=10, y=280)
 
+ignore_btn = Button(
+    root,
+    text='Stop Listening',
+    width=15,
+    bg = "white",
+    command=lambda: ToggleIgnore()
+)
+ignore_btn.place(x=160, y=280)
+
+def counter_label(lbl):
+    def count():
+        global current_running_time
+        global running_time
+        if running:
+            global counter
+            if counter == -1:
+                display = "00:00:00"
+            else:
+                display = to_string(counter)
+
+            lbl['text'] = display
+            current_running_time = (time.time() - reference_point) + running_time
+            counter = int(current_running_time)
+            lbl.after(100, count) #update every 1/2 second. We might see some "jogging" action
+
+    count()
+
+def ToggleTimer(lbl):
+    toggle_btn["bg"] = "red" if toggle_btn["bg"] == "green" else "green"
+    toggle_btn["text"] = "Start Timer" if toggle_btn["text"] == "Stop Timer" else "Stop Timer"
+    global running
+    global reference_point
+    global running_time
+    global pausing_time
+    running = not running
+    if running:
+        pausing_time += time.time() - reference_point #this is the time that passed in paus
+        reference_point = time.time() #now, we are in a new reference point
+        # print(f"running_time: {running_time}, pausing_time: {pausing_time}")
+        counter_label(lbl)
+    else: #we enter the pausing time
+        running_time += time.time() - reference_point
+        reference_point = time.time()
+        # print(f"running_time: {running_time}, pausing_time: {pausing_time}")
+
+
+def SetTimer(lbl):
+    global MONITORING
+    global running_time
+    global reference_point
+    MONITORING = False
+    ready = False
+    while not ready:
+        raw_string = input("enter time in hh:mm:ss format")
+        hours, mins, secs = tuple(raw_string.split(":"))
+        response = input(f"{hours}:{mins}:{secs} sound good? (y/n)")
+        if response == "y":
+            hours, mins, secs = int(hours), int(mins), int(secs)
+            ready = True
+
+    global counter
+    running_time = hours * 3600 + mins * 60 + secs
+    # reference_point = time.time()
+    lbl['text'] = f"{hours}:{mins}:{secs}"
+    MONITORING = True
+
+def ToggleIgnore():
+    global MONITORING
+    MONITORING = not MONITORING
+    ignore_btn["bg"] = "blue" if ignore_btn["bg"] == "white" else "white"
+    ignore_btn["text"] = "Start Listening" if ignore_btn["text"] == "Stop Listening" else "Stop Listening"
 
 def to_string(counter):
-    mins = counter // 60
+    hours = counter // 3600
+    mins = (counter - hours * 3600) // 60
     secs = counter % 60
+    if hours < 10:
+        hours = "0" + str(hours)
     if mins < 10:
         mins = "0" + str(mins)
     if secs < 10:
         secs = "0" + str(secs)
-    return f"{mins}:{secs}"
+    return f"{hours}:{mins}:{secs}"
 
 def app_main_loop():
     # Create another thread that monitors the keyboard
     global counter
+    global running_time
+    global current_running_time
     input_queue = queue.Queue()
     kb_input_thread = threading.Thread(target=_check_critical_keys_pressed, args=(input_queue,))
     kb_input_thread.daemon = True
@@ -133,12 +161,10 @@ def app_main_loop():
             if button == "space":
                 ToggleTimer(lbl)
             elif button == "left":
-                if counter > 10:
-                    counter -= 10
-                else:
-                    counter = 0
+                if current_running_time > JOG_LENGTH:
+                    running_time -= JOG_LENGTH
             elif button == "right":
-                counter += 10
+                running_time += JOG_LENGTH
             elif button == "1":
                 database[to_string(counter)] = "CORE FACT"
                 label_msg.insert("1.0", f"{to_string(counter)} CORE FACT\n")
@@ -151,7 +177,7 @@ def app_main_loop():
             elif button == "5":
                 database[to_string(counter)] = "CROSS REFERENCE"
                 label_msg.insert("1.0", f"{to_string(counter)} CROSS REFERENCE\n")
-        time.sleep(0.1)  # seconds
+        time.sleep(0.05)  # seconds
 
 
 def _check_critical_keys_pressed(input_queue):
