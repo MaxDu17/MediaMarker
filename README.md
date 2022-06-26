@@ -36,3 +36,6 @@ The third one, `Start / Stop Timer`, allows you to start and stop the timestamp 
 The fourth one, `Stop / Start Listening`, allows you to momentarily stop the key monitoring, if you're typing something. 
 
 Because the timer uses system time, it should not lag behind. The timer has been stress tested on a one-hour-long video, and it keeps in lock-step with the YouTube player. 
+
+# Screenshot
+![screenshot](./demo.png)
