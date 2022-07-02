@@ -3,20 +3,23 @@ import keyboard
 import threading
 import time
 import tkinter as tk
+from tkinter import ttk
 from tkinter import *
 
 # TODO: MODIFY these for your own purposes
-CRITICAL_KEYS = ["1", "2", "3", "5", "space", "left", "right"] #keys what we listen to
 KEY_DICT = {"1" : "CORE FACT", "2" : "LOOK INTO THIS", "3" : "INTERESTING FACT", "5" : "CROSS REFERENCE"} #what they print out
 JOG_LENGTH = 10 #how many seconds the arrow keys jog for
 
+
+CRITICAL_KEYS = list(["space", "left", "right"])
+CRITICAL_KEYS.extend(KEY_DICT.keys())
 monitoring = True
 root = tk.Tk()
 root.title("Video Annotator")
 root.attributes('-topmost',True)
 running = False
 counter = 0
-root.geometry('300x320+1200+300')
+root.geometry('300x385+1200+300')
 
 beginning = time.time()
 reference_point = time.time()
@@ -29,13 +32,27 @@ lbl = Label(
     fg="black",
     font="Verdana 40 bold"
 )
-
-label_msg = Text(root, height = 8, width = 31)
-label_msg.pack()
-
 lbl.place(x=10, y=10)
+
+
+label_msg = Text(root, height = 8, width = 31, state = "disabled")
+label_msg.pack()
 label_msg.place(x=10, y=100)
-database = {}
+
+database = list() #records the annotations
+
+def new_button(key, offset):
+    btn = Button(
+        root,
+        text=key,
+        width=5,
+        command = lambda: new_msg(key)
+    )
+    btn.place(x=10 + 50 * offset, y=350)
+
+for i, key in enumerate(KEY_DICT.keys()):
+    new_button(key, i)
+
 
 change_btn = Button(
     root,
@@ -70,6 +87,14 @@ ignore_btn = Button(
     command=lambda: ToggleIgnore()
 )
 ignore_btn.place(x=160, y=280)
+
+undo_btn = Button(
+    root,
+    text='Delete Last',
+    width=15,
+    command=lambda: undo()
+)
+undo_btn.place(x=85, y=310)
 
 def counter_label(lbl):
     def count():
@@ -146,6 +171,20 @@ def to_string(counter):
         secs = "0" + str(secs)
     return f"{hours}:{mins}:{secs}"
 
+def new_msg(button):
+    database.append(f"{to_string(counter)} {KEY_DICT[button]}")
+    # database[to_string(counter)] = KEY_DICT[button]
+    label_msg.configure(state="normal")
+    label_msg.insert("1.0", f"{to_string(counter)} {KEY_DICT[button]}\n")
+    label_msg.configure(state="disabled")
+
+def undo():
+    if len(database) > 0:
+        database.pop() #removes the last entry
+        label_msg.configure(state="normal")
+        label_msg.delete("0.0", "2.0")
+        label_msg.configure(state="disabled")
+
 def app_main_loop():
     # Create another thread that monitors the keyboard
     global counter
@@ -167,9 +206,10 @@ def app_main_loop():
             elif button == "right":
                 running_time += JOG_LENGTH
             else:
-                database[to_string(counter)] = KEY_DICT[button]
-                label_msg.insert("1.0", f"{to_string(counter)} {KEY_DICT[button]}\n")
+                new_msg(button)
+                # new_msg(button)
         time.sleep(0.05)  # seconds
+
 
 
 def _check_critical_keys_pressed(input_queue):
@@ -196,9 +236,9 @@ def _check_critical_keys_pressed(input_queue):
 def dump_to_text(database):
     with open(f"dump_{time.time()}.txt", "w") as f:
         print("******* REPORT GENERATED BELOW THIS LINE *******")
-        for key, value in database.items():
-            f.write(f"{key} {value}\n")
-            print(f"{key} {value}")
+        for elem in database:
+            f.write(elem + "\n")
+            print(elem)
         print("******* END OF REPORT *******")
 
 
