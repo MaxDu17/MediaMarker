@@ -7,28 +7,28 @@ from tkinter import ttk
 from tkinter import *
 
 # TODO: MODIFY these for your own purposes
-KEY_DICT = {"1" : "CORE FACT", "2" : "LOOK INTO THIS", "3" : "INTERESTING FACT", "5" : "CROSS REFERENCE"} #what they print out
+KEY_DICT = {"1" : "CORE FACT", "2" : "LOOK INTO THIS", "3" : "INTERESTING FACT", "5" : "CROSS REFERENCE", "8" : "QUOTABLE"} #what they print out
 JOG_LENGTH = 10 #how many seconds the arrow keys jog for
 
-
+# keys to listen for
 CRITICAL_KEYS = list(["space", "left", "right"])
 CRITICAL_KEYS.extend(KEY_DICT.keys())
-
+# key information variables
 monitoring = True
-additional_annotations = ""
 second_window = None
-
-root = tk.Tk()
-root.title("Video Annotator")
-root.attributes('-topmost',True)
 running = False
 counter = 0
-root.geometry('300x385+1200+300')
-
+database = list() #records the annotations
 beginning = time.time()
 reference_point = time.time()
 current_running_time = 0
 running_time = 0
+
+root = tk.Tk()
+root.title("Video Annotator")
+root.attributes('-topmost',True)
+root.geometry('300x385+1200+300')
+
 
 lbl = Label(
     root,
@@ -38,25 +38,22 @@ lbl = Label(
 )
 lbl.place(x=10, y=10)
 
-
 label_msg = Text(root, height = 8, width = 31, state = "disabled")
 label_msg.pack()
 label_msg.place(x=10, y=100)
 
-database = list() #records the annotations
-
+# for the hotkeys
 def new_button(key, offset):
     btn = Button(
         root,
         text=key,
         width=5,
-        command = lambda: new_msg(key)
+        command = lambda: NewMark(key)
     )
     btn.place(x=10 + 50 * offset, y=350)
 
 for i, key in enumerate(KEY_DICT.keys()):
     new_button(key, i)
-
 
 change_btn = Button(
     root,
@@ -70,7 +67,7 @@ dump_btn = Button(
     root,
     text='Dump',
     width=15,
-    command=lambda: dump_to_text(database)
+    command=lambda: DumpToText(database)
 )
 dump_btn.place(x=160, y=250)
 
@@ -96,17 +93,9 @@ undo_btn = Button(
     root,
     text='Delete Last',
     width=15,
-    command=lambda: undo()
+    command=lambda: Undo()
 )
 undo_btn.place(x=85, y=310)
-
-# undo_btn = Button(
-#     root,
-#     text='test',
-#     width=15,
-#     command=lambda: read_annotations()
-# )
-# undo_btn.place(x=85, y=310)
 
 def UpdateCounter(lbl):
     def count():
@@ -114,7 +103,7 @@ def UpdateCounter(lbl):
         global running_time
         if running:
             global counter
-            display = to_string(counter)
+            display = ToString(counter)
 
             lbl['text'] = display
             current_running_time = (time.time() - reference_point) + running_time
@@ -136,35 +125,26 @@ def ToggleTimer(lbl):
         running_time += time.time() - reference_point
         reference_point = time.time()
 
-def msgbox_close_routine(textBox):
+def OnAnnotationClose(textBox):
     global monitoring
     global second_window
     message = textBox.get("1.0", "end-1c")
-    database[-1] += f"\n\tAdditional Messages: {message}"
+    if len(message) > 0:
+        database[-1] += f"\n\tAdditional Messages: {message}"
     # return states back to normal
     monitoring = True
     second_window.destroy()
     second_window = None
 
-def read_annotations():
+def ReadAnnotations():
     global second_window
     global monitoring
     monitoring = False
     second_window = tk.Toplevel()
+    second_window.attributes('-topmost',True)
     textBox = Text(second_window, height=8, width=31)
     textBox.pack()
-    second_window.protocol("WM_DELETE_WINDOW", lambda: msgbox_close_routine(textBox))
-    # def retrieve_input(window):
-    #     global second_window
-    #     global monitoring
-    #     global database
-    #     message = textBox.get("1.0", "end-1c")
-    #     database[-1] += f"\n\tAdditional Messages: {message}"
-    #     monitoring = True
-    #     second_window.destroy()
-    #     second_window = None
-
-
+    second_window.protocol("WM_DELETE_WINDOW", lambda: OnAnnotationClose(textBox))
 
 def SetTimer(lbl):
     beg = time.time()
@@ -191,7 +171,7 @@ def SetTimer(lbl):
         running_time += diff #add the time passed
         reference_point = time.time() #push up the bar
 
-    lbl['text'] = to_string(running_time)
+    lbl['text'] = ToString(running_time)
     monitoring = True
 
 def ToggleIgnore():
@@ -200,7 +180,7 @@ def ToggleIgnore():
     ignore_btn["bg"] = "blue" if ignore_btn["bg"] == "white" else "white"
     ignore_btn["text"] = "Start Listening" if ignore_btn["text"] == "Stop Listening" else "Stop Listening"
 
-def to_string(counter):
+def ToString(counter):
     hours = counter // 3600
     mins = (counter - hours * 3600) // 60
     secs = counter % 60
@@ -212,14 +192,13 @@ def to_string(counter):
         secs = "0" + str(secs)
     return f"{hours}:{mins}:{secs}"
 
-def new_msg(button):
-    database.append(f"{to_string(counter)} {KEY_DICT[button]}")
-    # database[to_string(counter)] = KEY_DICT[button]
+def NewMark(button):
+    database.append(f"{ToString(counter)} {KEY_DICT[button]}")
     label_msg.configure(state="normal")
-    label_msg.insert("1.0", f"{to_string(counter)} {KEY_DICT[button]}\n")
+    label_msg.insert("1.0", f"{ToString(counter)} {KEY_DICT[button]}\n")
     label_msg.configure(state="disabled")
 
-def undo():
+def Undo():
     if len(database) > 0:
         database.pop() #removes the last entry
         label_msg.configure(state="normal")
@@ -231,7 +210,6 @@ def app_main_loop():
     global counter
     global running_time
     global current_running_time
-    global additional_annotations
     global second_window
     global monitoring
 
@@ -250,17 +228,15 @@ def app_main_loop():
                     running_time -= JOG_LENGTH
             elif button == "right":
                 running_time += JOG_LENGTH
-            elif button == "esc" and second_window is not None:
-                print("escaped!")
-                second_window.destroy()
-                second_window = None
-                monitoring = True
+            elif button == "esc":
+                if second_window is not None:
+                    second_window.destroy()
+                    second_window = None
+                    monitoring = True
             else:
-                new_msg(button)
-                read_annotations()
+                NewMark(button)
+                ReadAnnotations()
         time.sleep(0.05)  # seconds
-
-
 
 def _check_critical_keys_pressed(input_queue):
     while True:
@@ -290,7 +266,7 @@ def _check_critical_keys_pressed(input_queue):
             if done:
                 break
 
-def dump_to_text(database):
+def DumpToText(database):
     with open(f"dump_{time.time()}.txt", "w") as f:
         print("******* REPORT GENERATED BELOW THIS LINE *******")
         for elem in database:
@@ -307,4 +283,4 @@ if __name__ == "__main__":
 
     # Run the UI's main loop
     root.mainloop()
-    dump_to_text(database)
+    DumpToText(database)
