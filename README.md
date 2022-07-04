@@ -22,7 +22,7 @@ To annotate, the number keys to mark points in the video. As it stands:
 - the "5" key marks CROSS REFERENCE
 - the "8" key marks QUOTABLE
 
-After you add a mark, another window will pop up. You can type additional annotations into this window. Press the "X" on the window to save the annotations (won't be displayed, but it will be saved to the text dump). Press `esc` to exit without saving.
+After you add a mark, another window will pop up. You can type additional annotations into this window. Press "X" or `esc` to save and close the additional annotations. If you don't type anything, then no additional text will be added in the report
 The annotations can be easily changed in the code, if needed. 
 
 Note that the 4 and 6 key is not used because it conflicts with the jogging, for some reason. 

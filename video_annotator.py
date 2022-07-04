@@ -16,6 +16,7 @@ CRITICAL_KEYS.extend(KEY_DICT.keys())
 # key information variables
 monitoring = True
 second_window = None
+textBox = None
 running = False
 counter = 0
 database = list() #records the annotations
@@ -125,26 +126,29 @@ def ToggleTimer(lbl):
         running_time += time.time() - reference_point
         reference_point = time.time()
 
-def OnAnnotationClose(textBox):
+def OnAnnotationClose():
     global monitoring
+    global textBox
     global second_window
     message = textBox.get("1.0", "end-1c")
     if len(message) > 0:
         database[-1] += f"\n\tAdditional Messages: {message}"
-    # return states back to normal
+    # return states back to unopened state
     monitoring = True
     second_window.destroy()
     second_window = None
+    textBox = None
 
 def ReadAnnotations():
     global second_window
+    global textBox
     global monitoring
     monitoring = False
     second_window = tk.Toplevel()
     second_window.attributes('-topmost',True)
     textBox = Text(second_window, height=8, width=31)
     textBox.pack()
-    second_window.protocol("WM_DELETE_WINDOW", lambda: OnAnnotationClose(textBox))
+    second_window.protocol("WM_DELETE_WINDOW", lambda: OnAnnotationClose())
 
 def SetTimer(lbl):
     beg = time.time()
@@ -230,9 +234,10 @@ def app_main_loop():
                 running_time += JOG_LENGTH
             elif button == "esc":
                 if second_window is not None:
-                    second_window.destroy()
-                    second_window = None
-                    monitoring = True
+                    OnAnnotationClose()
+                    # second_window.destroy()
+                    # second_window = None
+                    # monitoring = True
             else:
                 NewMark(button)
                 ReadAnnotations()
