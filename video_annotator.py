@@ -129,7 +129,7 @@ def OnAnnotationClose():
     global monitoring
     global textBox
     global second_window
-    message = textBox.get("1.0", "end-1c")
+    message = textBox.get("1.0", tk.END)
     if len(message) > 0:
         database[-1] += f"\n\tAdditional Messages: {message}"
     # return states back to unopened state
@@ -147,7 +147,7 @@ def ReadAnnotations():
 
     textBox = Text(second_window, height=8, width=31)
     textBox.pack()
-    textBox.focus_force() #focuses the textbox so you don't have to click away 
+    textBox.focus_force() #focuses the textbox so you don't have to click away
     second_window.protocol("WM_DELETE_WINDOW", lambda: OnAnnotationClose())
 
 def SetTimer(lbl):
