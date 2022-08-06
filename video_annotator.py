@@ -7,7 +7,7 @@ from tkinter import ttk
 from tkinter import *
 
 # TODO: MODIFY these for your own purposes
-KEY_DICT = {"1" : "CORE FACT", "2" : "LOOK INTO THIS", "3" : "INTERESTING FACT", "5" : "CROSS REFERENCE", "8" : "QUOTABLE"} #what they print out
+KEY_DICT = {"1" : "CORE FACT", "2" : "LOOK INTO THIS", "3" : "INTERESTING FACT", "5" : "CROSS REFERENCE", "8" : "LITERATURE AND STYLE"} #what they print out
 JOG_LENGTH = 10 #how many seconds the arrow keys jog for
 
 # keys to listen for
@@ -40,7 +40,6 @@ lbl = Label(
 lbl.place(x=10, y=10)
 
 label_msg = Text(root, height = 8, width = 31, state = "disabled")
-label_msg.pack()
 label_msg.place(x=10, y=100)
 
 # for the hotkeys
@@ -145,9 +144,10 @@ def ReadAnnotations():
     global monitoring
     monitoring = False
     second_window = tk.Toplevel()
-    second_window.attributes('-topmost',True)
+
     textBox = Text(second_window, height=8, width=31)
     textBox.pack()
+    textBox.focus_force() #focuses the textbox so you don't have to click away 
     second_window.protocol("WM_DELETE_WINDOW", lambda: OnAnnotationClose())
 
 def SetTimer(lbl):
