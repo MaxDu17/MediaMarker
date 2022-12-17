@@ -5,7 +5,8 @@ import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
-import csv
+# import csv
+from CSVDatabase import Database
 
 # TODO: MODIFY these for your own purposes
 KEY_DICT = {"1" : "CORE FACT", "2" : "MY COMMENTS", "3" : "LOOK INTO THIS", "5" : "CROSS REFERENCE", "8" : "QUOTABLE", "9": "INTERESTING FACT"} #what they print out
@@ -15,13 +16,18 @@ JOG_LENGTH = 10 #how many seconds the arrow keys jog for
 CRITICAL_KEYS = list(["space", "left", "right"])
 CRITICAL_KEYS.extend(KEY_DICT.keys())
 # key information variables
-monitoring = True
-second_window = None
-textBox = None
-running = False
-counter = 0
-database = list() #records the annotations
-book = "" #title of the book
+#TODO use object to carry all of these values so I don't need global
+
+state_of_annotator = {
+    "monitoring" : True,
+    "second_window" : None,
+    "textBox" : None,
+    "running" : False,
+    "counter" : 0,
+    "database" : None
+}
+
+# book = "" #title of the book
 
 root = tk.Tk()
 root.title("Video Annotator")
@@ -31,7 +37,7 @@ root.geometry('300x385+1200+300')
 
 lbl = Label(
     root,
-    text="Page 0",
+    text=f"",
     fg="black",
     font="Verdana 40 bold"
 )
@@ -69,7 +75,7 @@ dump_btn = Button(
     root,
     text='Dump',
     width=15,
-    command=lambda: DumpToText()
+    command=lambda: database.data_dump()
 )
 dump_btn.place(x=160, y=250)
 
@@ -111,7 +117,8 @@ def OnAnnotationClose():
     global second_window
     message = textBox.get("1.0", tk.END)
     if len(message) > 0:
-        database[-1].append(message.strip("\n"))
+        database.add_annotation(message.strip("\n"))
+        # database[-1].append(message.strip("\n"))
     # return states back to unopened state
     monitoring = True
     second_window.destroy()
@@ -152,15 +159,14 @@ def ToggleIgnore():
     ignore_btn["text"] = "Start Listening" if ignore_btn["text"] == "Stop Listening" else "Stop Listening"
 
 def NewMark(button):
-    # database.append(f"{counter} {KEY_DICT[button]}")
-    database.append([counter, KEY_DICT[button]])
+    database.add_new_entry(counter, KEY_DICT[button])
     label_msg.configure(state="normal")
     label_msg.insert("1.0", f"{counter} {KEY_DICT[button]}\n")
     label_msg.configure(state="disabled")
 
 def Undo():
     if len(database) > 0:
-        database.pop() #removes the last entry
+        database.delete_last_entry() #removes the last entry
         label_msg.configure(state="normal")
         label_msg.delete("0.0", "2.0")
         label_msg.configure(state="disabled")
@@ -221,51 +227,13 @@ def _check_critical_keys_pressed(input_queue):
             if done:
                 break
 
-def DumpToText():
-    global book
-    global database
-
-    with open(f"{book}.csv", "w", newline='') as f:
-        writer = csv.writer(f, delimiter=',')
-        print("******* REPORT GENERATED BELOW THIS LINE *******")
-        for elem in database:
-            writer.writerow(elem)
-            # f.write(elem + "\n")
-            print(elem)
-        print("******* END OF REPORT *******")
-
-def ParseDatabase(reader):
-    global counter
-    global database
-    for line in reader:
-        try:
-            page, marker, comments = int(line[0]), line[1], line[2]
-            print(f"Parsed: pg {page} | {marker} | {comments}")
-
-        except:
-            print(f"Line not parsed due to error: {line}")
-        database.append([page, marker, comments])
-    database.sort(key = lambda x : x[0]) # just in case we messed things up last time s
-    counter = database[-1][0]
-
 if __name__ == "__main__":
     # Run the app's main logic loop in a different thread
-    reloading = False
-
-
-    response = input(f"name of book")
-    try:
-        with open(f"{response}.csv", "r") as f:
-            reader = csv.reader(f)
-            reloading = True
-            ParseDatabase(reader)
-    except:
-            print("Book not found! Let's make a new entry for you.")
-            reloading = False
-    book = response
-
-    input("press enter to continue")
-
+    response = input(f"name of book ")
+    database = Database(response)
+    counter = database.get_last_page()
+    UpdateCounter(lbl, 0)
+    input("Press enter to continue")
     main_loop_thread = threading.Thread(target=app_main_loop) #, args=(my_label,))
     main_loop_thread.daemon = True
     main_loop_thread.start()
@@ -273,4 +241,4 @@ if __name__ == "__main__":
 
     # Run the UI's main loop
     root.mainloop()
-    DumpToText()
+    database.data_dump()
