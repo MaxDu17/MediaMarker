@@ -5,6 +5,7 @@ import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
+from CSVDatabase import Database
 
 # TODO: MODIFY these for your own purposes
 KEY_DICT = {"1" : "CORE FACT", "2" : "MY COMMENTS", "3" : "LOOK INTO THIS", "5" : "CROSS REFERENCE", "8" : "QUOTABLE", "9": "INTERESTING FACT"} #what they print out
@@ -21,7 +22,6 @@ state_of_annotator = {
     "textBox" : None,
     "running" : False,
     "counter" : 0,
-    "database" : list(), #records the annotations
     "beginning" : time.time(),
     "reference_point" : time.time(),
     "current_running_time" : 0,
@@ -76,7 +76,7 @@ dump_btn = Button(
     root,
     text='Dump',
     width=15,
-    command=lambda: DumpToText(state_of_annotator["database"])
+    command=lambda: database.data_dump(ToString)
 )
 dump_btn.place(x=160, y=250)
 
@@ -131,7 +131,8 @@ def ToggleTimer(lbl):
 def OnAnnotationClose():
     message = state_of_annotator["textBox"].get("1.0", tk.END)
     if len(message) > 0:
-        state_of_annotator["database"][-1] += f"\n\tAdditional Messages: {message}"
+        database.add_annotation(message.strip("\n"))
+        # state_of_annotator["database"][-1] += f"\n\tAdditional Messages: {message}"
     # return states back to unopened state
     state_of_annotator["monitoring"] = True
     state_of_annotator["second_window"].destroy()
@@ -190,14 +191,14 @@ def ToString(counter):
     return f"{hours}:{mins}:{secs}"
 
 def NewMark(button):
-    state_of_annotator["database"].append(f"{ToString(state_of_annotator['counter'])} {KEY_DICT[button]}")
+    database.add_new_entry(state_of_annotator["counter"], KEY_DICT[button])
     label_msg.configure(state="normal")
     label_msg.insert("1.0", f"{ToString(state_of_annotator['counter'])} {KEY_DICT[button]}\n")
     label_msg.configure(state="disabled")
 
 def Undo():
-    if len(state_of_annotator["database"]) > 0:
-        state_of_annotator["database"].pop() #removes the last entry
+    if len(database) > 0:
+        database.delete_last_entry()
         label_msg.configure(state="normal")
         label_msg.delete("0.0", "2.0")
         label_msg.configure(state="disabled")
@@ -255,21 +256,19 @@ def _check_critical_keys_pressed(input_queue):
             if done:
                 break
 
-def DumpToText(database):
-    with open(f"dump_{time.time()}.txt", "w") as f:
-        print("******* REPORT GENERATED BELOW THIS LINE *******")
-        for elem in database:
-            f.write(elem + "\n")
-            print(elem)
-        print("******* END OF REPORT *******")
-
 
 if __name__ == "__main__":
     # Run the app's main logic loop in a different thread
+    response = input(f"name of subject ")
+    database = Database(response)
+    state_of_annotator["running_time"] = database.get_last_page()
+    print(state_of_annotator["running_time"])
+
     main_loop_thread = threading.Thread(target=app_main_loop) #, args=(my_label,))
     main_loop_thread.daemon = True
     main_loop_thread.start()
 
     # Run the UI's main loop
     root.mainloop()
-    DumpToText(state_of_annotator["database"])
+    database.data_dump(ToString)
+    # DumpToText(state_of_annotator["database"])

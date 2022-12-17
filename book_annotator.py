@@ -22,7 +22,6 @@ state_of_annotator = {
     "textBox" : None,
     "running" : False,
     "counter" : 0,
-    "database" : None
 }
 
 root = tk.Tk()

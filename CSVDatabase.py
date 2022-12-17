@@ -46,13 +46,17 @@ class Database:
     def add_annotation(self, annotation):
         self.data[-1].append(annotation)
 
-    def data_dump(self):
+    def data_dump(self, to_string = None):
         with open(f"{self.base_dir}/{self.subject}.csv", "w", newline='') as f:
             writer = csv.writer(f, delimiter=',')
             print("******* REPORT GENERATED BELOW THIS LINE *******")
             for elem in self.data:
                 writer.writerow(elem)
-                print(elem)
+                if to_string is None:
+                    print(elem)
+                else:
+                    # accomodates the counter for time, which needs to be parsed
+                    print(to_string(elem[0]),elem[1:])
             print("******* END OF REPORT *******")
 
     def __len__(self):
