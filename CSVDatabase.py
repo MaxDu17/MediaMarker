@@ -20,8 +20,12 @@ class Database:
     def parse_database(self, reader):
         for line in reader:
             try:
-                page, marker, comments = int(line[0]), line[1], line[2]
-                print(f"Parsed: pg {page} | {marker} | {comments}")
+                page, marker= int(line[0]), line[1]
+                if len(line) > 2:
+                    comments = line[2]
+                    print(f"Parsed: pg {page} | {marker} | {comments}")
+                else:
+                    print(f"Parsed: pg {page} | {marker}")
 
             except:
                 print(f"Line not parsed due to error: {line}")

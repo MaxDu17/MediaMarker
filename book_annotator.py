@@ -5,7 +5,6 @@ import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
-# import csv
 from CSVDatabase import Database
 
 # TODO: MODIFY these for your own purposes
@@ -15,9 +14,8 @@ JOG_LENGTH = 10 #how many seconds the arrow keys jog for
 # keys to listen for
 CRITICAL_KEYS = list(["space", "left", "right"])
 CRITICAL_KEYS.extend(KEY_DICT.keys())
-# key information variables
-#TODO use object to carry all of these values so I don't need global
 
+# having this structure allows for global access
 state_of_annotator = {
     "monitoring" : True,
     "second_window" : None,
@@ -27,28 +25,14 @@ state_of_annotator = {
     "database" : None
 }
 
-# book = "" #title of the book
-
 root = tk.Tk()
 root.title("Video Annotator")
 root.attributes('-topmost',True)
 root.geometry('300x385+1200+300')
 
-
-lbl = Label(
-    root,
-    text=f"",
-    fg="black",
-    font="Verdana 40 bold"
-)
-lbl.place(x=10, y=10)
-
-label_msg = Text(root, height = 8, width = 31, state = "disabled")
-label_msg.place(x=10, y=100)
-
 def mark_and_annotate(key):
-    NewMark(key)
-    ReadAnnotations()
+    new_mark(key)
+    read_annotations()
 
 # for the hotkeys
 def new_button(key, offset):
@@ -60,6 +44,15 @@ def new_button(key, offset):
     )
     btn.place(x=10 + 50 * offset, y=350)
 
+lbl = Label(
+    root,
+    text=f"",
+    fg="black",
+    font="Verdana 40 bold"
+)
+lbl.place(x=10, y=10)
+label_msg = Text(root, height = 8, width = 31, state = "disabled")
+label_msg.place(x=10, y=100)
 for i, key in enumerate(KEY_DICT.keys()):
     new_button(key, i)
 
@@ -67,7 +60,7 @@ change_btn = Button(
     root,
     text='Jump To',
     width=15,
-    command=lambda: SetPage(lbl)
+    command=lambda: set_page(lbl)
 )
 change_btn.place(x=10, y=250)
 
@@ -84,7 +77,7 @@ toggle_btn = Button(
     text='Next',
     width=15,
     bg = "green",
-    command=lambda: UpdateCounter(lbl, 1)
+    command=lambda: update_counter(lbl, 1)
 )
 toggle_btn.place(x=10, y=280)
 
@@ -93,7 +86,7 @@ ignore_btn = Button(
     text='Stop Listening',
     width=15,
     bg = "white",
-    command=lambda: ToggleIgnore()
+    command=lambda: toggle_ignore()
 )
 ignore_btn.place(x=160, y=280)
 
@@ -101,70 +94,60 @@ undo_btn = Button(
     root,
     text='Delete Last',
     width=15,
-    command=lambda: Undo()
+    command=lambda: undo()
 )
 undo_btn.place(x=85, y=310)
 
-def UpdateCounter(lbl, delta):
-    global counter
-    counter += delta
-    counter = 0 if counter < 0 else counter # make sure we don't do negative page
-    lbl['text'] = f"Page {counter}"
+def update_counter(lbl, delta):
+    state_of_annotator["counter"] += delta
+    state_of_annotator["counter"] = 0 if state_of_annotator["counter"] < 0 else state_of_annotator["counter"] # make sure we don't do negative page
+    lbl['text'] = f"Page {state_of_annotator['counter']}"
 
-def OnAnnotationClose():
-    global monitoring
-    global textBox
-    global second_window
-    message = textBox.get("1.0", tk.END)
+def on_annotation_close():
+    message = state_of_annotator["textBox"].get("1.0", tk.END)
     if len(message) > 0:
         database.add_annotation(message.strip("\n"))
         # database[-1].append(message.strip("\n"))
     # return states back to unopened state
-    monitoring = True
-    second_window.destroy()
-    second_window = None
-    textBox = None
+    state_of_annotator["monitoring"] = True
+    state_of_annotator["second_window"].destroy()
+    state_of_annotator["second_window"] = None
+    state_of_annotator["textBox"] = None
 
-def ReadAnnotations():
-    global second_window
-    global textBox
-    global monitoring
-    monitoring = False
-    second_window = tk.Toplevel()
-
-    textBox = Text(second_window, height=8, width=31)
+def read_annotations():
+    state_of_annotator["monitoring"] = False
+    state_of_annotator["second_window"] = tk.Toplevel()
+    textBox = Text(state_of_annotator["second_window"], height=8, width=31)
     textBox.pack()
     textBox.focus_force()
-    second_window.protocol("WM_DELETE_WINDOW", lambda: OnAnnotationClose()) # hook in thsi function to read on close
+    state_of_annotator["textBox"] = textBox
+    state_of_annotator["second_window"].protocol("WM_DELETE_WINDOW", lambda: on_annotation_close()) # hook in thsi function to read on close
 
-def SetPage(lbl):
-    global counter
-    global monitoring
-    monitoring = False
+def set_page(lbl):
+    state_of_annotator["monitoring"] = False
     ready = False
     while not ready:
         page = int(input("enter page number "))
         response = input(f"{page} sound good? (y/n)")
         if response == "y":
-            counter = page
+            state_of_annotator["counter"] = page
             ready = True
-    monitoring = True
-    lbl['text'] = f"Page {counter}"
+    state_of_annotator["monitoring"] = True
+    lbl['text'] = f"Page {state_of_annotator['counter']}"
 
 
-def ToggleIgnore():
-    global monitoring
-    monitoring = not monitoring
+def toggle_ignore():
+    state_of_annotator["monitoring"] = not state_of_annotator["monitoring"]
     ignore_btn["bg"] = "blue" if ignore_btn["bg"] == "white" else "white"
     ignore_btn["text"] = "Start Listening" if ignore_btn["text"] == "Stop Listening" else "Stop Listening"
 
-def NewMark(button):
-    database.add_new_entry(counter, KEY_DICT[button])
+def new_mark(button):
+    database.add_new_entry(state_of_annotator["counter"], KEY_DICT[button])
     label_msg.configure(state="normal")
-    label_msg.insert("1.0", f"{counter} {KEY_DICT[button]}\n")
+    label_msg.insert("1.0", f"{state_of_annotator['counter']} {KEY_DICT[button]}\n")
     label_msg.configure(state="disabled")
 
-def Undo():
+def undo():
     if len(database) > 0:
         database.delete_last_entry() #removes the last entry
         label_msg.configure(state="normal")
@@ -173,10 +156,6 @@ def Undo():
 
 def app_main_loop():
     # Create another thread that monitors the keyboard
-    global counter
-    global second_window
-    global monitoring
-
     input_queue = queue.Queue()
     kb_input_thread = threading.Thread(target=_check_critical_keys_pressed, args=(input_queue,))
     kb_input_thread.daemon = True
@@ -186,17 +165,17 @@ def app_main_loop():
         if not input_queue.empty():
             button = input_queue.get()
             if button == "space":
-                UpdateCounter(lbl, 1)
+                update_counter(lbl, 1)
             elif button == "left":
-                UpdateCounter(lbl, -1)
+                update_counter(lbl, -1)
             elif button == "right":
-                UpdateCounter(lbl, 1)
+                update_counter(lbl, 1)
             elif button == "esc":
-                if second_window is not None:
-                    OnAnnotationClose()
+                if state_of_annotator["second_window"] is not None:
+                    on_annotation_close()
             else:
-                NewMark(button)
-                ReadAnnotations()
+                new_mark(button)
+                read_annotations()
         time.sleep(0.05)  # seconds
 
 def _check_critical_keys_pressed(input_queue):
@@ -209,7 +188,7 @@ def _check_critical_keys_pressed(input_queue):
                 input_queue.put("esc") #special case
                 done = True
             for key in CRITICAL_KEYS:
-                if keyboard.is_pressed(key) and monitoring:
+                if keyboard.is_pressed(key) and state_of_annotator["monitoring"]:
                     input_queue.put(key)
                     done = True
                     break
@@ -231,8 +210,8 @@ if __name__ == "__main__":
     # Run the app's main logic loop in a different thread
     response = input(f"name of book ")
     database = Database(response)
-    counter = database.get_last_page()
-    UpdateCounter(lbl, 0)
+    state_of_annotator["counter"] = database.get_last_page()
+    update_counter(lbl, 0)
     input("Press enter to continue")
     main_loop_thread = threading.Thread(target=app_main_loop) #, args=(my_label,))
     main_loop_thread.daemon = True
