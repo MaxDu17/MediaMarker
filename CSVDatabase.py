@@ -1,18 +1,18 @@
 import csv
 
 class Database:
-    def __init__(self, book, base_dir = "logs/"):
+    def __init__(self, subject, base_dir = "logs/"):
         self.last_page = 0
         self.data = list()
-        self.book = book
+        self.subject = subject
         self.base_dir = base_dir
-        if book is not None:
+        if subject is not None:
             try:
-                with open(f"{base_dir}{book}.csv", "r") as f:
+                with open(f"{base_dir}{subject}.csv", "r") as f:
                     reader = csv.reader(f)
                     self.parse_database(reader)
             except FileNotFoundError:
-                print("Book not found! Let's make a new entry for you.")
+                print("Subject not found! Let's make a new entry for you.")
             except:  # avoid situatiosn where we accidentally wipe the file
                 print("I've loaded the file but I'm having trouble reading it. Please remove it or fix it before running again!")
                 quit()
@@ -24,12 +24,13 @@ class Database:
                 if len(line) > 2:
                     comments = line[2]
                     print(f"Parsed: pg {page} | {marker} | {comments}")
+                    self.data.append([page, marker, comments])
                 else:
                     print(f"Parsed: pg {page} | {marker}")
+                    self.data.append([page, marker])
 
             except:
                 print(f"Line not parsed due to error: {line}")
-            self.data.append([page, marker, comments])
         self.data.sort(key=lambda x: x[0])  # just in case we messed things up last time s
         self.last_page = self.data[-1][0]
 
@@ -46,7 +47,7 @@ class Database:
         self.data[-1].append(annotation)
 
     def data_dump(self):
-        with open(f"{self.base_dir}/{self.book}.csv", "w", newline='') as f:
+        with open(f"{self.base_dir}/{self.subject}.csv", "w", newline='') as f:
             writer = csv.writer(f, delimiter=',')
             print("******* REPORT GENERATED BELOW THIS LINE *******")
             for elem in self.data:
