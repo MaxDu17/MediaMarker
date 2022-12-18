@@ -48,8 +48,8 @@ label_msg.place(x=10, y=100)
 
 
 def mark_and_annotate(key):
-    NewMark(key)
-    ReadAnnotations()
+    new_mark(key)
+    read_annotations()
 
 # for the hotkeys
 def new_button(key, offset):
@@ -68,7 +68,7 @@ change_btn = Button(
     root,
     text='Recalibrate',
     width=15,
-    command=lambda: SetTimer(lbl)
+    command=lambda: set_timer(lbl)
 )
 change_btn.place(x=10, y=250)
 
@@ -76,7 +76,7 @@ dump_btn = Button(
     root,
     text='Dump',
     width=15,
-    command=lambda: database.data_dump(ToString)
+    command=lambda: database.data_dump(pretty_print)
 )
 dump_btn.place(x=160, y=250)
 
@@ -85,7 +85,7 @@ toggle_btn = Button(
     text='Start Timer',
     width=15,
     bg = "green",
-    command=lambda: ToggleTimer(lbl)
+    command=lambda: toggle_timer(lbl)
 )
 toggle_btn.place(x=10, y=280)
 
@@ -94,7 +94,7 @@ ignore_btn = Button(
     text='Stop Listening',
     width=15,
     bg = "white",
-    command=lambda: ToggleIgnore()
+    command=lambda: toggle_ignore()
 )
 ignore_btn.place(x=160, y=280)
 
@@ -102,14 +102,14 @@ undo_btn = Button(
     root,
     text='Delete Last',
     width=15,
-    command=lambda: Undo()
+    command=lambda: undo()
 )
 undo_btn.place(x=85, y=310)
 
-def UpdateCounter(lbl):
+def update_counter(lbl):
     def count():
         if state_of_annotator["running"]:
-            display = ToString(state_of_annotator["counter"])
+            display = to_string(state_of_annotator["counter"])
             lbl['text'] = display
             state_of_annotator["current_running_time"] = (time.time() - state_of_annotator["reference_point"]) \
                                                  + state_of_annotator["running_time"]
@@ -117,18 +117,18 @@ def UpdateCounter(lbl):
             lbl.after(100, count) #update every 1/10 second. We might see some "jogging" action
     count()
 
-def ToggleTimer(lbl):
+def toggle_timer(lbl):
     toggle_btn["bg"] = "red" if toggle_btn["bg"] == "green" else "green"
     toggle_btn["text"] = "Start Timer" if toggle_btn["text"] == "Stop Timer" else "Stop Timer"
     state_of_annotator["running"]= not state_of_annotator["running"]
     if state_of_annotator["running"]:
         state_of_annotator["reference_point"] = time.time() #push up the bar
-        UpdateCounter(lbl)
+        update_counter(lbl)
     else: #we enter the pausing time
         state_of_annotator["running_time"] += time.time() - state_of_annotator["reference_point"]
         state_of_annotator["reference_point"] = time.time()
 
-def OnAnnotationClose():
+def on_annotation_close():
     message = state_of_annotator["textBox"].get("1.0", tk.END)
     if len(message) > 0:
         database.add_annotation(message.strip("\n"))
@@ -139,7 +139,7 @@ def OnAnnotationClose():
     state_of_annotator["second_window"] = None
     state_of_annotator["textBox"] = None
 
-def ReadAnnotations():
+def read_annotations():
     state_of_annotator["monitoring"] = False
     state_of_annotator["second_window"]  = tk.Toplevel()
 
@@ -147,9 +147,9 @@ def ReadAnnotations():
     textBox.pack()
     textBox.focus_force()
     state_of_annotator["textBox"] = textBox
-    state_of_annotator["second_window"].protocol("WM_DELETE_WINDOW", lambda: OnAnnotationClose())
+    state_of_annotator["second_window"].protocol("WM_DELETE_WINDOW", lambda: on_annotation_close())
 
-def SetTimer(lbl):
+def set_timer(lbl):
     beg = time.time()
     state_of_annotator["monitoring"] = False
     ready = False
@@ -170,15 +170,15 @@ def SetTimer(lbl):
         state_of_annotator["running_time"] += diff #add the time passed
         state_of_annotator["reference_point"] = time.time() #push up the bar
 
-    lbl['text'] = ToString(state_of_annotator["running_time"])
+    lbl['text'] = to_string(state_of_annotator["running_time"])
     state_of_annotator["monitoring"] = True
 
-def ToggleIgnore():
+def toggle_ignore():
     state_of_annotator["monitoring"] = not state_of_annotator["monitoring"]
     ignore_btn["bg"] = "blue" if ignore_btn["bg"] == "white" else "white"
     ignore_btn["text"] = "Start Listening" if ignore_btn["text"] == "Stop Listening" else "Stop Listening"
 
-def ToString(counter):
+def to_string(counter):
     hours = counter // 3600
     mins = (counter - hours * 3600) // 60
     secs = counter % 60
@@ -190,13 +190,19 @@ def ToString(counter):
         secs = "0" + str(secs)
     return f"{hours}:{mins}:{secs}"
 
-def NewMark(button):
+def pretty_print(entry):
+    if len(entry) == 2:
+        print(f"{to_string(entry[0])} {entry[1]}\n")
+    else:
+        print(f"{to_string(entry[0])} {entry[1]} \n {entry[2]}\n")
+
+def new_mark(button):
     database.add_new_entry(state_of_annotator["counter"], KEY_DICT[button])
     label_msg.configure(state="normal")
-    label_msg.insert("1.0", f"{ToString(state_of_annotator['counter'])} {KEY_DICT[button]}\n")
+    label_msg.insert("1.0", f"{to_string(state_of_annotator['counter'])} {KEY_DICT[button]}\n")
     label_msg.configure(state="disabled")
 
-def Undo():
+def undo():
     if len(database) > 0:
         database.delete_last_entry()
         label_msg.configure(state="normal")
@@ -214,7 +220,7 @@ def app_main_loop():
         if not input_queue.empty():
             button = input_queue.get()
             if button == "space":
-                ToggleTimer(lbl)
+                toggle_timer(lbl)
             elif button == "left":
                 if state_of_annotator["current_running_time"] > JOG_LENGTH:
                     state_of_annotator["running_time"] -= JOG_LENGTH
@@ -222,10 +228,10 @@ def app_main_loop():
                 state_of_annotator["running_time"] += JOG_LENGTH
             elif button == "esc":
                 if state_of_annotator["second_window"] is not None:
-                    OnAnnotationClose()
+                    on_annotation_close()
             else:
-                NewMark(button)
-                ReadAnnotations()
+                new_mark(button)
+                read_annotations()
         time.sleep(0.05)  # seconds
 
 def _check_critical_keys_pressed(input_queue):
@@ -270,5 +276,5 @@ if __name__ == "__main__":
 
     # Run the UI's main loop
     root.mainloop()
-    database.data_dump(ToString)
+    database.data_dump(pretty_print)
     # DumpToText(state_of_annotator["database"])

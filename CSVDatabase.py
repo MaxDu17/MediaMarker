@@ -23,10 +23,10 @@ class Database:
                 page, marker= int(line[0]), line[1]
                 if len(line) > 2:
                     comments = line[2]
-                    print(f"Parsed: pg {page} | {marker} | {comments}")
+                    print(f"Parsed: {page} | {marker} | {comments}")
                     self.data.append([page, marker, comments])
                 else:
-                    print(f"Parsed: pg {page} | {marker}")
+                    print(f"Parsed: {page} | {marker}")
                     self.data.append([page, marker])
 
             except:
@@ -46,17 +46,18 @@ class Database:
     def add_annotation(self, annotation):
         self.data[-1].append(annotation)
 
-    def data_dump(self, to_string = None):
+    def data_dump(self, pretty_print = None):
         with open(f"{self.base_dir}/{self.subject}.csv", "w", newline='') as f:
             writer = csv.writer(f, delimiter=',')
             print("******* REPORT GENERATED BELOW THIS LINE *******")
             for elem in self.data:
                 writer.writerow(elem)
-                if to_string is None:
+                if pretty_print is None:
                     print(elem)
                 else:
                     # accomodates the counter for time, which needs to be parsed
-                    print(to_string(elem[0]),elem[1:])
+                    pretty_print(elem)
+                    # print(to_string(elem[0]),elem[1:])
             print("******* END OF REPORT *******")
 
     def __len__(self):
