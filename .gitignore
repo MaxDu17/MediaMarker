@@ -2,3 +2,5 @@ dump_*
 dist/
 .idea/
 logs/
+pretrained_models/
+wave_cache_tmp/
