@@ -6,14 +6,21 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 from CSVDatabase import Database
+import os
 
 # TODO: MODIFY these for your own purposes
-KEY_DICT = {"1" : "CORE FACT", "2" : "MY COMMENTS", "3" : "LOOK INTO THIS", "5" : "CROSS REFERENCE", "8" : "QUOTABLE", "9": "INTERESTING FACT"} #what they print out
+KEY_DICT = {"1" : "CORE FACT", "2": "ANECDOTE", "3" : "LOOK INTO THIS", "5" : "NEW CHARACTER", "7": "CHAPTER BREAK", "9": "INTERESTING FACT"} #what they print out
 JOG_LENGTH = 10 #how many seconds the arrow keys jog for
 
 # keys to listen for
 CRITICAL_KEYS = list(["space", "left", "right"])
 CRITICAL_KEYS.extend(KEY_DICT.keys())
+
+def pretty_print(msg):
+    page = msg[0]
+    tag = msg[1]
+    note = msg[2]
+    print(f"{page}: {tag} {note}")
 
 # having this structure allows for global access
 state_of_annotator = {
@@ -25,7 +32,7 @@ state_of_annotator = {
 }
 
 root = tk.Tk()
-root.title("Video Annotator")
+root.title("Book Annotator")
 root.attributes('-topmost',True)
 root.geometry('300x385+1200+300')
 
@@ -67,7 +74,7 @@ dump_btn = Button(
     root,
     text='Dump',
     width=15,
-    command=lambda: database.data_dump()
+    command=lambda: database.data_dump(pretty_print)
 )
 dump_btn.place(x=160, y=250)
 
@@ -205,13 +212,15 @@ def _check_critical_keys_pressed(input_queue):
             if done:
                 break
 
+
+
 if __name__ == "__main__":
     # Run the app's main logic loop in a different thread
-    response = input(f"name of book ")
+    print("Here are some potential books / experiences on file: ", os.listdir("logs/"))
+    response = input(f"Enter name of book: ")
     database = Database(response)
     state_of_annotator["counter"] = database.get_last_page()
     update_counter(lbl, 0)
-    input("Press enter to continue")
     main_loop_thread = threading.Thread(target=app_main_loop) #, args=(my_label,))
     main_loop_thread.daemon = True
     main_loop_thread.start()
@@ -219,4 +228,4 @@ if __name__ == "__main__":
 
     # Run the UI's main loop
     root.mainloop()
-    database.data_dump()
+    database.data_dump(pretty_print)
